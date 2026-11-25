@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 const tube = (hex, strength = 1) => ({ hex, strength });
 const ULTRAMARINE = tube('#23308A');

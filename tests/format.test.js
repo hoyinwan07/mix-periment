@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
-const { seededRandom } = require('./random');
+const PM = require('./helpers/setup');
+const { seededRandom } = require('./helpers/random');
 
 const sum = (labels) => labels.reduce((total, l) => total + parseFloat(l), 0);
 

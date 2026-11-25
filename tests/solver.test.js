@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 const palette = PM.palette.reset();
 const byName = (name) => palette.find((t) => t.name === name);

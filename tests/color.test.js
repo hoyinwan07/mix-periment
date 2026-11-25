@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 // Reference pairs from Sharma, Wu & Dalal (2005), "The CIEDE2000 Color-Difference Formula:
 // Implementation Notes, Supplementary Test Data, and Mathematical Observations".
