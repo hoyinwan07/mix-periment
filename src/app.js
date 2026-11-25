@@ -7,8 +7,8 @@
   const TARGET_KEY = 'mixperiment.target';
 
   /** @typedef {{ id: string, name: string, hex: string, strength: number }} Tube */
-  /** Sandbox entry: amount = current slider value, base = recipe amount (both 0–100). */
-  /** @typedef {{ tube: Tube, amount: number, base: number }} SandboxEntry */
+  /** Sandbox entry: amount = the tube's slider value, its share of the mix (0–100). */
+  /** @typedef {{ tube: Tube, amount: number }} SandboxEntry */
 
   const state = {
     /** @type {Tube[]} */ palette: PM.palette.load(),
@@ -140,6 +140,8 @@
       return;
     }
     state.recipe = PM.solver.solve(state.target, state.palette, Number($('maxTubes').value));
+    cancelTween();
+    held = null;
     state.sandbox = recipeEntries();
     renderRecipe();
     renderSandbox();
@@ -213,12 +215,11 @@
   const toMix = (entries) =>
     entries.filter((e) => e.amount > 0).map((e) => ({ tube: e.tube, w: e.amount }));
 
-  /** @returns {SandboxEntry[]} */
-  const recipeEntries = () =>
-    state.recipe.items.map((item) => {
-      const amount = Math.round(item.frac * 1000) / 10;
-      return { tube: item.tube, amount, base: amount };
-    });
+  /** The recipe in whole percents (the sandbox moves in 1% steps). @returns {SandboxEntry[]} */
+  function recipeEntries() {
+    const shares = PM.sandbox.wholeShares(state.recipe.items.map((item) => item.frac));
+    return state.recipe.items.map((item, i) => ({ tube: item.tube, amount: shares[i] }));
+  }
 
   const phoneLayout = window.matchMedia(C.PHONE_MEDIA);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -226,18 +227,40 @@
   /** Rows currently on screen, so updates don't have to query the DOM. */
   let sandboxRows = [];
 
+  // While a slider is dragged, only its own bar moves; the other bars glide into place on
+  // release. The mix, swatches and % labels already show the rebalanced mix during the drag,
+  // so what you see while dragging is exactly what you get on release.
+  /** @type {SandboxEntry | null} the tube being dragged, until the other bars have settled */
+  let held = null;
+
+  /** Shares (summing to 100) with the held tube fixed and the others scaled around it. */
+  function settledShares() {
+    const amounts = state.sandbox.map((e) => e.amount);
+    const i = state.sandbox.indexOf(held);
+    return i < 0 ? amounts : PM.sandbox.rebalance(amounts, i);
+  }
+
+  /** On release: glide the other bars to their rebalanced shares. */
+  function settle(entry) {
+    held = entry;
+    tweenSandbox(settledShares(), () => {
+      held = null;
+    });
+  }
+
   function renderSandbox() {
     paint($('sbTarget'), state.target);
     sandboxRows = state.sandbox.map((entry) => {
       const slider = PM.ui.createSlider({
         label: entry.tube.name,
-        base: entry.base,
         value: entry.amount,
         onInput: (value) => {
           cancelTween();
+          held = entry;
           entry.amount = value;
           updateSandboxSoon();
         },
+        onCommit: () => settle(entry),
       });
       paintVar(slider.el, entry.tube.hex);
       slider.setVertical(phoneLayout.matches);
@@ -274,20 +297,19 @@
   }
 
   function updateSandbox() {
-    const total = state.sandbox.reduce((sum, e) => sum + e.amount, 0);
-    const shares = PM.format.shareLabels(state.sandbox.map((e) => e.amount));
-    const bump = Math.max(total * 0.1, 2); // "a bit more" = +10% of the mix
+    const shares = settledShares();
+    const settled = state.sandbox.map((e, i) => ({ tube: e.tube, amount: shares[i] }));
+    const labels = PM.sandbox.wholeShares(shares).map((s) => s + '%');
+    const bump = Math.max(shares.reduce((sum, s) => sum + s, 0) * 0.1, 2); // "a bit more" = +10%
 
     sandboxRows.forEach(({ entry, slider, share, more }, i) => {
-      share.textContent = shares[i];
+      share.textContent = labels[i];
       slider.update(entry.amount);
-      const withMore = state.sandbox.map((e) =>
-        e === entry ? { ...e, amount: e.amount + bump } : e,
-      );
+      const withMore = settled.map((e, j) => (j === i ? { ...e, amount: e.amount + bump } : e));
       paint(more, PM.mixHex(toMix(withMore)));
     });
 
-    const mix = toMix(state.sandbox);
+    const mix = toMix(settled);
     if (!mix.length) {
       delete $('sbMix').dataset.hex;
       $('sbMix').style.backgroundColor = 'transparent';
@@ -305,7 +327,7 @@
   }
   const updateSandboxSoon = perFrame(updateSandbox);
 
-  // Glide animations (reset / add / remove) so thumbs, fills and swatches move smoothly.
+  // Glide animations (release / reset / add / remove) so thumbs, fills and swatches move smoothly.
   let tweenId = 0;
   const cancelTween = () => {
     tweenId++;
@@ -329,22 +351,27 @@
     requestAnimationFrame(frame);
   }
 
+  /** Glide `entry` to `value` while the other tubes scale to fill the rest. */
+  const tweenShare = (entry, value, done) => {
+    held = null;
+    const amounts = state.sandbox.map((e) => e.amount);
+    tweenSandbox(PM.sandbox.rebalance(amounts, state.sandbox.indexOf(entry), value), done);
+  };
+
   function removeFromSandbox(entry) {
-    tweenSandbox(
-      state.sandbox.map((e) => (e === entry ? 0 : e.amount)),
-      () => {
-        state.sandbox = state.sandbox.filter((e) => e !== entry);
-        renderSandbox();
-      },
-    );
+    tweenShare(entry, 0, () => {
+      state.sandbox = state.sandbox.filter((e) => e !== entry);
+      renderSandbox();
+    });
   }
 
   $('sbAdd').addEventListener('change', (e) => {
     const tube = state.palette.find((t) => t.id === e.target.value);
     if (!tube) return;
-    state.sandbox.push({ tube, amount: 0, base: 0 });
+    const entry = { tube, amount: 0 };
+    state.sandbox.push(entry);
     renderSandbox();
-    tweenSandbox(state.sandbox.map((x) => (x.tube === tube ? C.ADD_TUBE_AMOUNT : x.amount)));
+    tweenShare(entry, C.ADD_TUBE_AMOUNT);
   });
 
   // Back to the recipe: recipe tubes glide to their amounts, extra tubes glide to 0 and leave.
@@ -357,8 +384,9 @@
       ...recipe.map((r) => ({ ...r, amount: current.get(r.tube.id) ?? 0 })),
       ...extras,
     ];
+    held = null;
     renderSandbox();
-    tweenSandbox([...recipe.map((r) => r.base), ...extras.map(() => 0)], () => {
+    tweenSandbox([...recipe.map((r) => r.amount), ...extras.map(() => 0)], () => {
       state.sandbox = state.sandbox.slice(0, recipe.length);
       renderSandbox();
     });

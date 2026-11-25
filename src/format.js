@@ -12,7 +12,9 @@
    */
   function shareLabels(amounts) {
     const total = amounts.reduce((sum, a) => sum + a, 0);
-    if (!total) return amounts.map(() => '0%');
+    if (!total) {
+      return amounts.map(() => '0%');
+    }
 
     const decimals = amounts.some((a) => a > 0 && a / total < 0.1) ? 1 : 0;
     const unit = 10 ** decimals; // count in tenths of a percent when decimals = 1
