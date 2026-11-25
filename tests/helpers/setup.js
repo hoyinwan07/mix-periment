@@ -12,6 +12,6 @@ const SCRIPTS = [
   'palette',
   'sandbox',
 ];
-for (const name of SCRIPTS) require(path.join(__dirname, '..', 'src', `${name}.js`));
+for (const name of SCRIPTS) require(path.join(__dirname, '..', '..', 'src', `${name}.js`));
 
 module.exports = globalThis.PM;

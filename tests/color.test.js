@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 // Reference pairs from Sharma, Wu & Dalal (2005), "The CIEDE2000 Color-Difference Formula:
 // Implementation Notes, Supplementary Test Data, and Mathematical Observations".
@@ -19,9 +19,10 @@ test('deltaE2000 matches the Sharma 2005 reference data', () => {
   }
 });
 
-test('deltaE2000 is symmetric and zero for identical colors', () => {
+test('deltaE2000 is symmetric and 0 for identical colors', () => {
   const a = [62, 10, -30];
   const b = [55, -4, 12];
+
   assert.equal(PM.deltaE2000(a, a).dE, 0);
   assert.ok(Math.abs(PM.deltaE2000(a, b).dE - PM.deltaE2000(b, a).dE) < 1e-9);
 });
@@ -30,6 +31,7 @@ test('parseHex normalizes valid input and rejects invalid input', () => {
   assert.equal(PM.parseHex('#abc'), '#AABBCC');
   assert.equal(PM.parseHex('7a8b5c'), '#7A8B5C');
   assert.equal(PM.parseHex('  #7A8B5C '), '#7A8B5C');
+
   for (const bad of ['', '#12345', '#GGGGGG', 'red', null, undefined, 42]) {
     assert.equal(PM.parseHex(bad), null, String(bad));
   }
@@ -43,6 +45,7 @@ test('hex -> Lab -> hex round-trips', () => {
 
 test('grayOf keeps lightness and removes chroma', () => {
   const gray = PM.hexToLab(PM.grayOf('#C8302A'));
+
   assert.ok(Math.abs(gray[0] - PM.hexToLab('#C8302A')[0]) < 0.5);
   assert.ok(PM.lch(gray).C < 1);
 });

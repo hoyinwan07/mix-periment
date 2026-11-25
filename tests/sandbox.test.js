@@ -1,19 +1,21 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
+const { seededRandom } = require('./helpers/random');
 
 const { rebalance, wholeShares } = PM.sandbox;
 const sum = (values) => values.reduce((total, v) => total + v, 0);
-
-let seed = 7;
-const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const random = seededRandom(7);
 
 test('whole shares are whole numbers adding up to exactly 100', () => {
   assert.deepEqual(wholeShares([43.5, 43.5, 13]), [44, 43, 13]);
   assert.deepEqual(wholeShares([1, 1, 1]), [34, 33, 33]);
+
   for (let run = 0; run < 200; run++) {
-    const amounts = Array.from({ length: 1 + Math.floor(random() * 5) }, () => random() * 100);
+    const tubeCount = random.wholeNumber(1, 5);
+    const amounts = random.amounts(tubeCount);
     const shares = wholeShares(amounts);
+
     assert.equal(sum(shares), 100, amounts.join(','));
     assert.ok(shares.every(Number.isInteger), amounts.join(','));
   }
@@ -32,9 +34,11 @@ test('rebalance keeps the set tube and scales the others to fill the rest', () =
 
 test('rebalance always gives whole numbers adding up to 100', () => {
   for (let run = 0; run < 200; run++) {
-    const amounts = Array.from({ length: 2 + Math.floor(random() * 4) }, () => random() * 100);
-    const index = Math.floor(random() * amounts.length);
-    const shares = rebalance(amounts, index, random() * 100);
+    const tubeCount = random.wholeNumber(2, 5);
+    const amounts = random.amounts(tubeCount);
+    const draggedTube = random.wholeNumber(0, tubeCount - 1);
+    const shares = rebalance(amounts, draggedTube, random.amount());
+
     assert.equal(sum(shares), 100, amounts.join(','));
     assert.ok(shares.every(Number.isInteger), amounts.join(','));
   }

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 test('sanitize drops invalid tubes and clamps strength', () => {
   const tubes = PM.palette.sanitize([

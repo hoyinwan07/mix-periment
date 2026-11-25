@@ -110,10 +110,13 @@ src/
   format.js           UI text formatting (pure)
   storage.js          localStorage with in-memory fallback
   palette.js          default tubes, validation, import/export
+  sandbox.js          sandbox shares: rebalancing, whole percents (pure)
   ui/slider.js        sandbox slider component
   ui/eyedropper.js    photo color picker component
   app.js              state, rendering, event wiring
 tests/                node:test suites
+  helpers/setup.js    loads src/ into Node
+  helpers/random.js   seeded random test inputs
 ```
 
 ## References

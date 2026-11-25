@@ -1,12 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const PM = require('./setup');
+const PM = require('./helpers/setup');
 
 const palette = PM.palette.reset();
 const lab = (hex) => PM.hexToLab(hex);
 
 test('identical colors get a single "spot on" tip', () => {
   const tips = PM.coach.tips(lab('#7A8B5C'), lab('#7A8B5C'), palette);
+
   assert.equal(tips.length, 1);
   assert.match(tips[0], /Spot on/);
 });
