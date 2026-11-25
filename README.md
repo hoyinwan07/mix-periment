@@ -2,6 +2,8 @@
 
 **Turn any color into an oil-paint recipe using only the tubes you own.**
 
+**[Live demo →](https://hoyinwan07.github.io/mix-periment/)**
+
 Oil paint is expensive, and mixing by trial and error wastes it. Pick a target color (hex, color
 picker, or eyedropper on a reference photo) and mix-periment tells you which of _your_ tubes to
 mix, in what proportions, how close the result will be, and what to adjust if it's off.
