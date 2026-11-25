@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- No third-party code, no network calls: only this site's own files may load. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' blob: data:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>mix-periment</title>
+    <meta
+      name="description"
+      content="Turn any color into an oil-paint recipe using only the tubes you own. Physically based (Kubelka-Munk) mixing, runs fully in the browser."
+    />
+    <meta name="theme-color" content="#EAE6E0" />
+    <meta property="og:title" content="mix-periment" />
+    <meta
+      property="og:description"
+      content="Turn any color into an oil-paint recipe using only the tubes you own."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1 class="app-title">mix-periment</h1>
+      <label class="toggle"><input type="checkbox" id="grayMode" /> Value view</label>
+    </header>
+
+    <main>
+      <section class="card" id="targetCard">
+        <h2>Target color</h2>
+        <div class="row">
+          <input type="color" id="picker" aria-label="Pick a color" />
+          <input
+            type="text"
+            id="hexInput"
+            spellcheck="false"
+            autocomplete="off"
+            aria-label="Hex value"
+            maxlength="7"
+          />
+          <label class="small"
+            >Max tubes
+            <select id="maxTubes">
+              <option>2</option>
+              <option selected>3</option>
+            </select>
+          </label>
+        </div>
+        <p class="error" id="hexError" hidden>Enter a hex like #7A8B5C</p>
+        <button type="button" class="secondary upload-cta" id="uploadBtn">
+          Upload reference photo
+        </button>
+        <input type="file" id="imageInput" accept="image/*" hidden />
+        <div id="imageWrap" hidden>
+          <canvas id="imageCanvas"></canvas>
+          <p class="hint">Tap or drag on the photo to sample a color (5×5 pixel average).</p>
+        </div>
+      </section>
+
+      <section class="card" id="resultCard" hidden>
+        <h2>Recipe</h2>
+        <div class="compare">
+          <figure>
+            <div class="swatch big" id="swTarget"></div>
+            <figcaption>Target · <span id="valTarget"></span></figcaption>
+          </figure>
+          <figure>
+            <div class="swatch big" id="swMix"></div>
+            <figcaption>Your mix · <span id="valMix"></span></figcaption>
+          </figure>
+        </div>
+        <p class="badge" id="deBadge"></p>
+        <p class="warn" id="gamutWarn" hidden></p>
+        <div class="bar" id="recipeBar"></div>
+        <ol class="recipe" id="recipeList"></ol>
+        <p class="hint">
+          Lay out the first pile, then work the others in gradually, smallest last.
+        </p>
+        <ul class="coach" id="coach"></ul>
+      </section>
+
+      <section class="card" id="sandboxCard" hidden>
+        <h2>Sandbox</h2>
+        <p class="hint">
+          Drag the sliders to see what each tube does. The ring marks the recipe amount, and the
+          colored fill shows how far you've moved from it. The small swatch on the right shows the
+          mix with a bit more of that tube.
+        </p>
+        <div class="compare">
+          <figure>
+            <div class="swatch" id="sbTarget"></div>
+            <figcaption>Target</figcaption>
+          </figure>
+          <figure>
+            <div class="swatch" id="sbMix"></div>
+            <figcaption>Sandbox · <span id="sbDE"></span></figcaption>
+          </figure>
+        </div>
+        <div id="sbRows"></div>
+        <div class="row">
+          <select id="sbAdd" aria-label="Add a tube to the sandbox"></select>
+          <button type="button" class="secondary" id="sbReset">Reset to recipe</button>
+        </div>
+        <ul class="coach" id="sbCoach"></ul>
+      </section>
+
+      <section class="card" id="stripCard" hidden>
+        <h2>Tints, tones &amp; shades</h2>
+        <p class="hint">
+          Your sandbox mix with more white, gray, black or its complement. Plan your light and
+          shadow versions before you mix them.
+        </p>
+        <div id="strip"></div>
+      </section>
+
+      <section class="card" id="paletteCard">
+        <h2>My tubes</h2>
+        <p class="hint">
+          Saved in this browser. Starting colors are estimates: set each hex to match a swatch you
+          painted. <b>Strength</b> = tinting strength (raise it if a tube overpowers mixes more than
+          predicted).
+        </p>
+        <div id="paletteList"></div>
+        <form class="row" id="addForm">
+          <input type="color" id="addColor" value="#888888" aria-label="New tube color" />
+          <input type="text" id="addName" placeholder="New tube name" required maxlength="60" />
+          <button type="submit">Add</button>
+        </form>
+        <div class="row">
+          <button type="button" class="secondary" id="exportBtn">Export</button>
+          <button type="button" class="secondary" id="importBtn">Import</button>
+          <input type="file" id="importInput" accept="application/json,.json" hidden />
+          <button type="button" class="secondary danger" id="resetBtn">Reset to defaults</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Mixes are modeled (Kubelka-Munk) and screens aren't paint. Treat each recipe as a close first
+      mix, then judge by eye under your studio light. Oils can shift slightly as they dry.
+    </footer>
+
+    <noscript><p class="card">mix-periment needs JavaScript to mix colors.</p></noscript>
+
+    <!-- Plain scripts (not ES modules) so the app also runs when index.html is opened from disk.
+       Order matters: constants → core math → guidance → storage → UI components → app. -->
+    <script src="src/constants.js"></script>
+    <script src="src/color.js"></script>
+    <script src="src/mixer.js"></script>
+    <script src="src/solver.js"></script>
+    <script src="src/format.js"></script>
+    <script src="src/coach.js"></script>
+    <script src="src/storage.js"></script>
+    <script src="src/palette.js"></script>
+    <script src="src/ui/slider.js"></script>
+    <script src="src/ui/eyedropper.js"></script>
+    <script src="src/app.js"></script>
+  </body>
+</html>
