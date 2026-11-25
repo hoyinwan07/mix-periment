@@ -18,7 +18,7 @@ mix, in what proportions, how close the result will be, and what to adjust if it
 | **Physically based mixing** | Blue + yellow makes green, not gray (spectral Kubelka-Munk, not RGB averaging).                                                      |
 | **Accuracy you can trust**  | ΔE2000 score with plain-language meaning, plus a gamut warning when your tubes can't reach a color.                                  |
 | **Color-theory coach**      | Tips in the order painters correct a mix (value → chroma → hue), naming the actual tube to reach for.                                |
-| **Sandbox**                 | Sliders show how each tube changes the mix, relative to the recipe amount.                                                           |
+| **Sandbox**                 | Each bar is a tube's share of the mix; drag one and the others rebalance to 100%.                                                    |
 | **Tints, tones & shades**   | Preview the mix with white, a same-value gray, black, or its complement.                                                             |
 | **Value view**              | One toggle shows everything in grayscale, to check value without hue in the way.                                                     |
 | **Your palette**            | Add, edit, delete tubes; saved in the browser; export/import JSON to move between devices.                                           |

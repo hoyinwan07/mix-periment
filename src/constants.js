@@ -54,9 +54,9 @@
     DEFAULT_TARGET: '#7A8B5C',
     /** Debounce for re-solving while the picker is being dragged. */
     SOLVE_DEBOUNCE_MS: 120,
-    /** Duration of slider glide animations (reset / add / remove). */
+    /** Duration of slider glide animations (release / reset / add / remove). */
     TWEEN_MS: 320,
-    /** Amount a newly added sandbox tube starts at (slider units, 0–100). */
+    /** Share of the mix (%) a newly added sandbox tube starts at. */
     ADD_TUBE_AMOUNT: 5,
     /** Uploaded photos are downscaled to this many pixels on the long side. */
     IMAGE_MAX_PX: 1600,

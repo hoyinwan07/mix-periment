@@ -1,56 +1,48 @@
 // Sandbox amount slider: a native <input type="range"> (keyboard + screen-reader support for
-// free) layered over a custom track: pill rail, tick dots, a ring at the recipe amount, and a
-// fill in the tube's color from that ring to the thumb (how far you've moved from the recipe).
-// The tube color comes from the --c custom property set on the returned root element.
+// free) layered over a custom track. The track fills from the left in the tube's color, so the
+// filled length is the tube's share of the mix. The native thumb is invisible: press or drag
+// anywhere on the track. The tube color comes from the --c custom property on the root element.
 (function (root) {
   const PM = (root.PM = root.PM || {});
-  const TICKS = [0, 25, 50, 75, 100];
-
-  const span = (className, leftPercent) => {
-    const node = document.createElement('span');
-    node.className = className;
-    node.style.left = leftPercent + '%';
-    return node;
-  };
+  const TICKS = [25, 50, 75];
 
   /**
-   * @param {{ label: string, base: number, value: number, onInput: (value: number) => void }} options
-   *   base = recipe amount (0–100), shown as the ring; value = current amount (0–100)
+   * @param {{ label: string, value: number, onInput: (value: number) => void,
+   *   onCommit: (value: number) => void }} options
+   *   value = share of the mix (0–100); onInput fires while dragging, onCommit on release
    */
-  function createSlider({ label, base, value, onInput }) {
+  function createSlider({ label, value, onInput, onCommit }) {
     const rootEl = document.createElement('div');
     rootEl.className = 'slider';
 
-    const rail = document.createElement('div');
-    rail.className = 'rail';
-
-    const lane = document.createElement('div');
-    lane.className = 'lane';
+    const track = document.createElement('div');
+    track.className = 'track';
+    const ticks = TICKS.map((p) => {
+      const tick = document.createElement('span');
+      tick.className = 'tick';
+      tick.style.left = p + '%';
+      return tick;
+    });
     const fill = document.createElement('div');
     fill.className = 'fill';
-    const ring = span('origin', base);
-    ring.title = 'Recipe amount';
-    lane.append(...TICKS.map((p) => span('tick', p)), fill, ring);
+    track.append(...ticks, fill);
 
     const input = document.createElement('input');
     input.type = 'range';
     input.min = '0';
     input.max = '100';
-    input.step = '0.1';
+    input.step = '1';
     input.value = String(value);
-    input.setAttribute('aria-label', `${label} amount (recipe: ${base})`);
+    input.setAttribute('aria-label', `${label} share of the mix`);
     input.addEventListener('input', () => onInput(Number(input.value)));
+    input.addEventListener('change', () => onCommit(Number(input.value)));
 
-    rootEl.append(rail, lane, input);
+    rootEl.append(track, input);
 
-    /** Sync the thumb and fill to `amount` (called on drag and during animations). */
+    /** Sync the fill (and the input, unless the user is mid-drag) to `amount`. */
     function update(amount) {
-      const lo = Math.min(amount, base);
-      const hi = Math.max(amount, base);
-      // The lane is inset by the thumb radius (--r), so 0–100% lines up with the thumb's travel.
-      fill.style.left = `calc(${lo}% - var(--r))`;
-      fill.style.width = `calc(${hi - lo}% + 2 * var(--r))`;
-      if (Math.abs(Number(input.value) - amount) > 0.05) input.value = String(amount);
+      fill.style.width = amount + '%';
+      if (Math.abs(Number(input.value) - amount) >= 0.5) input.value = String(amount);
     }
 
     /** Announce the orientation that matches the layout (vertical on phones). */

@@ -344,56 +344,44 @@ figcaption {
   min-width: 0;
 }
 
-/* Sandbox slider: pill track, dots, a ring at the recipe amount, and a fill in the tube's color
-   (--c, set from JS) running from that ring to the thumb. --r = thumb radius, so the lane's
-   0–100% lines up exactly with the native thumb's travel. */
+/* Sandbox slider: a pill track that fills from the left in the tube's color (--c, set from JS),
+   so the filled length is the tube's share of the mix. The native range input sits on top,
+   invisible, for dragging, keyboard and screen readers. Its thumb is 2px wide and transparent,
+   so the pointer lines up with the fill's edge across the whole track. */
 .slider {
-  --r: 12px;
   position: relative;
   height: 32px;
 }
-.slider .rail {
+.slider .track {
   position: absolute;
-  inset: 0;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 20px;
+  margin-top: -10px;
   border-radius: 999px;
-}
-.slider .lane {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--r);
-  right: var(--r);
-  pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+  overflow: hidden;
 }
 .slider .tick {
   position: absolute;
   top: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .slider .fill {
   position: absolute;
-  top: 50%;
-  height: 24px;
-  margin-top: -12px;
+  top: 0;
+  bottom: 0;
+  left: 0;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--c) 45%, transparent);
-  box-shadow: inset 0 0 0 1px rgba(28, 28, 28, 0.12);
+  background: var(--c);
+  box-shadow: inset 0 0 0 1px rgba(28, 28, 28, 0.15); /* keeps light tubes visible */
   transition: background-color 0.25s ease;
-}
-.slider .origin {
-  position: absolute;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  margin: -6px 0 0 -6px;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
-  background: var(--card);
 }
 .slider input[type='range'] {
   -webkit-appearance: none;
@@ -404,7 +392,7 @@ figcaption {
   height: 100%;
   margin: 0;
   background: transparent;
-  cursor: pointer;
+  cursor: ew-resize;
   touch-action: pan-y;
 }
 .slider input[type='range']::-webkit-slider-runnable-track {
@@ -419,52 +407,23 @@ figcaption {
 }
 .slider input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 24px;
-  height: 24px;
-  margin-top: 4px;
+  width: 2px;
+  height: 100%;
   border: none;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow:
-    0 0 0 2px var(--card),
-    0 0 0 3px rgba(28, 28, 28, 0.35),
-    0 1px 4px rgba(0, 0, 0, 0.3);
-  transition:
-    transform 0.15s ease,
-    background-color 0.25s ease;
+  background: transparent;
 }
 .slider input[type='range']::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
+  width: 2px;
+  height: 100%;
   border: none;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow:
-    0 0 0 2px var(--card),
-    0 0 0 3px rgba(28, 28, 28, 0.35),
-    0 1px 4px rgba(0, 0, 0, 0.3);
-  transition:
-    transform 0.15s ease,
-    background-color 0.25s ease;
-}
-.slider input[type='range']:active::-webkit-slider-thumb {
-  transform: scale(1.12);
-}
-.slider input[type='range']:active::-moz-range-thumb {
-  transform: scale(1.12);
+  background: transparent;
 }
 .slider input[type='range']:focus {
   outline: none;
 }
-.slider input[type='range']:focus-visible::-webkit-slider-thumb {
-  box-shadow:
-    0 0 0 2px var(--card),
-    0 0 0 4px var(--accent);
-}
-.slider input[type='range']:focus-visible::-moz-range-thumb {
-  box-shadow:
-    0 0 0 2px var(--card),
-    0 0 0 4px var(--accent);
+.slider:has(input:focus-visible) .track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -613,5 +572,6 @@ figcaption {
   /* A vertical drag here should move the slider, not scroll the page. */
   .slider input[type='range'] {
     touch-action: none;
+    cursor: ns-resize;
   }
 }
