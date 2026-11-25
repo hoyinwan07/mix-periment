@@ -7,6 +7,7 @@ const lab = (hex) => PM.hexToLab(hex);
 
 test('identical colors get a single "spot on" tip', () => {
   const tips = PM.coach.tips(lab('#7A8B5C'), lab('#7A8B5C'), palette);
+
   assert.equal(tips.length, 1);
   assert.match(tips[0], /Spot on/);
 });

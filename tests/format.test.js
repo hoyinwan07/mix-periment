@@ -1,15 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const PM = require('./setup');
+const { seededRandom } = require('./random');
 
 const sum = (labels) => labels.reduce((total, l) => total + parseFloat(l), 0);
 
 test('share labels always add up to exactly 100%', () => {
-  let seed = 42;
-  const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const random = seededRandom(42);
+
   for (let run = 0; run < 500; run++) {
-    const amounts = Array.from({ length: 1 + Math.floor(random() * 4) }, () => random() * 100);
-    assert.equal(sum(PM.format.shareLabels(amounts)).toFixed(1), '100.0', amounts.join(','));
+    const tubeCount = random.wholeNumber(1, 4);
+    const amounts = random.amounts(tubeCount);
+    const labels = PM.format.shareLabels(amounts);
+
+    assert.equal(sum(labels).toFixed(1), '100.0', amounts.join(','));
   }
 });
 
